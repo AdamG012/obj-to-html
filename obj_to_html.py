@@ -1,5 +1,6 @@
 import sys
 import argparse
+import requests
 from os.path import exists
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -11,7 +12,7 @@ The code contains material and inspiration from ThreeJS : https://github.com/mrd
 
 Usage:
 
-python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> --title <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE]
+python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> --title <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE]
 
 Example:
                   python obj_to_html.py tree.obj tree.html -t "Tree Object"
@@ -24,11 +25,13 @@ parser.add_argument('--min_camera', type=float, default=2,
                     help='The minimum distance for camera view.')
 parser.add_argument('--max_camera', type=float, default=1000,
                     help='The maximum distance for camera view.')
-parser.add_argument('--z_pos', type=float, default=250,
+parser.add_argument('-z', '--z_pos', type=float, default=250,
                     help='The Z coordinate to display the camera.')
 parser.add_argument('-t', '--title', type=str, required=True,
                     help='The title for the HTML file.')
 parser.add_argument('-T', '--texture', type=str, default=None,
+                    help='The texture file for the object.')
+parser.add_argument('-m', '--mtl_file', type=str, default=None,
                     help='The texture file for the object.')
 args = parser.parse_args()
 
@@ -39,17 +42,13 @@ def obj_to_html():
     min_camera  = str(args.min_camera)
     max_camera  = str(args.max_camera)
     z_pos       = str(args.z_pos)
-    texture     = args.texture
+    texture_url = args.texture
+    mtl_file    = args.mtl_file
 
     if obj_file is None or out_file is None:
         raise ValueError("Arguments cannot be None!")
 
-    if not exists(obj_file):
-        raise ValueError("Object file path is incorrect or does not exist!")
-
-    OUT_STR = ""
-    with open(obj_file, 'r') as f:
-        OUT_STR = """
+    OUT_STR = """
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -62,6 +61,8 @@ def obj_to_html():
 import * as THREE from 'https://cdn.skypack.dev/three@0.132.2/build/three.module.js';
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import { OBJLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/MTLLoader.js';
+import { DDSLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/DDSLoader.js';
 
 let container;
 let camera, scene, renderer;
@@ -69,13 +70,14 @@ let mouseX = 0, mouseY = 0;
 let windowHalfX = window.innerWidth / 2;
 let windowHalfY = window.innerHeight / 2;
 let object;
-let objContent = `""" + f.read() + """`;
 init();
 animate();
+
 function init() {
+
     container = document.createElement( 'div' );
     document.body.appendChild( container );
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight,""" + f"{min_camera}, {max_camera}); camera.position.z = {z_pos};" + """
+    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight,""" + f"{min_camera}, {max_camera});\n\tcamera.position.z = {z_pos};" + """
     camera.rotation.order = 'YXZ';
 
     // scene
@@ -86,22 +88,70 @@ function init() {
     camera.add( pointLight );
     scene.add( camera );
 
-
     // loading object
-    const loader = new OBJLoader();
-    object = loader.parse(objContent);
-
-    // loading textures
-    if ( """ + ("true" if texture is not None else "false") + """ ) {
-        const textureLoader = new THREE.TextureLoader();
-        const texture       = textureLoader.load(""" + f"\'{texture}\'" + """);
-        const material      = new THREE.MeshPhysicalMaterial( { map : texture } );
+    function loadModel() {
         object.traverse( function ( child ) {
-            if ( child.isMesh ) child.material = material;
+            if ( child.isMesh ) child.material.map = texture;
         });
+        scene.add(object);
     }
 
-    scene.add(object);
+    function onProgress( xhr ) {
+        if ( xhr.lengthComputable ) {
+            const percentComplete = xhr.loaded / xhr.total * 100;
+            console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+	    }
+	}
+    function onError() {}
+
+    var object;
+    var material;
+    var loader;
+    var textureLoader;
+    var texture;
+
+    // loading textures
+    if ( """ + ("true" if texture_url is not None and mtl_file is None else "false") + """ ) {
+        var manager = new THREE.LoadingManager(loadModel);
+        manager.onProgress = function ( item, loaded, total ) {
+            console.log( item, loaded, total );
+        };
+        textureLoader = new THREE.TextureLoader(manager);
+        texture       = textureLoader.load(""" + f"\'{texture_url}\'" + """);
+        material      = new THREE.MeshPhysicalMaterial( { map : texture } );
+        loader        = new OBJLoader(manager);
+        loader.setCrossOrigin("");
+        loader.load( \'""" + obj_file + """\', function ( obj ) {
+            object = obj;
+        }, onProgress, onError);
+    }
+
+    // loading MTL ontop of OBJ
+    else if ( """ + ("true" if mtl_file is not None else "false") + """ ) {
+        var manager   = new THREE.LoadingManager();
+		manager.addHandler( /\.dds$/i, new DDSLoader() );
+        // Uncomment if you need to use TGA textures
+		// manager.addHandler( /\.tga$/i, new TGALoader() );
+
+        var mtlLoader = new MTLLoader( manager )
+            .load( \'""" + mtl_file + """\', function ( materials ) {
+                materials.preload();
+                new OBJLoader( manager )
+                    .setMaterials( materials )
+                    .load( \'""" + obj_file + """\', function ( object ) {
+                        object.position.y = - 95;
+                        scene.add( object );
+                    }, onProgress, onError );
+            } );
+    }
+
+    else {
+        loader = new OBJLoader();
+        loader.load( \'""" + obj_file + """\', function ( obj ) {
+            object = obj;
+            scene.add(object);
+        }, onProgress, onError);
+    }
 
 
     // Renderer setup

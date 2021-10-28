@@ -20,7 +20,7 @@ The code contains material and inspiration from ThreeJS : https://github.com/mrd
 ### Usage and Examples
 
 ``` python
-python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> --title <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA]
+python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> --title <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE]
 ```
 
 
@@ -33,6 +33,8 @@ Optional arguments:
   - `--min_camera MIN_CAMERA`: The minimum distance for camera view.
   - `--max_camera MAX_CAMERA`: The maximum distance for camera view.
   - `--z_pos Z_POS`: The Z coordinate to display the camera.
+  - `--texture TEXTURE_FILE`: The Z coordinate to display the camera.
+  - `--mtl_file MTL_FILE`: The Z coordinate to display the camera.
 
 Example:
                   `python obj_to_html.py tree.obj tree.html -t "Tree Object"`
