@@ -48,6 +48,53 @@ def obj_to_html():
     if obj_file is None or out_file is None:
         raise ValueError("Arguments cannot be None!")
 
+    load_str = ""
+    if texture_url is not None and mtl_file is None:
+        load_str = """
+    var manager = new THREE.LoadingManager(loadModel);
+    manager.onProgress = function ( item, loaded, total ) {
+        console.log( item, loaded, total );
+    };
+    textureLoader = new THREE.TextureLoader(manager);
+    texture       = textureLoader.load(""" + f"\'{texture_url}\'" + """);
+    material      = new THREE.MeshPhysicalMaterial( { map : texture } );
+    loader        = new OBJLoader(manager);
+    loader.setCrossOrigin("");
+    loader.load( \'""" + obj_file + """\', function ( obj ) {
+        object = obj;
+    }, onProgress, onError);
+    """
+
+    elif mtl_file is not None:
+        load_str = """
+    // loading MTL ontop of OBJ
+    var manager   = new THREE.LoadingManager();
+
+    manager.addHandler( /\.dds$/i, new DDSLoader() );
+    // Uncomment if you need to use TGA textures
+    // manager.addHandler( /\.tga$/i, new TGALoader() );
+
+    var mtlLoader = new MTLLoader( manager )
+        .load( \'""" + mtl_file + """\', function ( materials ) {
+            materials.preload();
+            new OBJLoader( manager )
+                .setMaterials( materials )
+                .load( \'""" + obj_file + """\', function ( object ) {
+                    object.position.y = - 95;
+                    scene.add( object );
+                }, onProgress, onError );
+        } );
+    """
+
+    else:
+        load_str = """
+    loader = new OBJLoader();
+    loader.load( \'""" + obj_file + """\', function ( obj ) {
+        object = obj;
+        scene.add(object);
+    }, onProgress, onError);
+    """
+
     OUT_STR = """
 <!DOCTYPE html>
 <html lang="en">
@@ -55,8 +102,26 @@ def obj_to_html():
         <title>""" + title + """</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            #progressBar {
+                width: 100%;
+                background-color: #ddd;
+            }
+
+            #completionBar {
+                width: 0%;
+                background-color: #48BA6D;
+                text-align: center;
+                line-height: 30px;
+                color: white;
+            }
+        </style>
     </head>
     <body>
+        <div id="progressBar">
+            <div id="completionBar">0%</div>
+        </div>
+        <br>
         <script type="module">
 import * as THREE from 'https://cdn.skypack.dev/three@0.132.2/build/three.module.js';
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
@@ -99,7 +164,10 @@ function init() {
     function onProgress( xhr ) {
         if ( xhr.lengthComputable ) {
             const percentComplete = xhr.loaded / xhr.total * 100;
-            console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+            var roundedPercentage = Math.round( percentComplete, 2 );
+            console.log( 'model ' + roundedPercentage + '% downloaded' );
+            document.getElementById("completionBar").style.width  = roundedPercentage + "%";
+            document.getElementById("completionBar").innerHTML    = "The model is " + roundedPercentage + " percent downloaded.";
 	    }
 	}
     function onError() {}
@@ -110,49 +178,7 @@ function init() {
     var textureLoader;
     var texture;
 
-    // loading textures
-    if ( """ + ("true" if texture_url is not None and mtl_file is None else "false") + """ ) {
-        var manager = new THREE.LoadingManager(loadModel);
-        manager.onProgress = function ( item, loaded, total ) {
-            console.log( item, loaded, total );
-        };
-        textureLoader = new THREE.TextureLoader(manager);
-        texture       = textureLoader.load(""" + f"\'{texture_url}\'" + """);
-        material      = new THREE.MeshPhysicalMaterial( { map : texture } );
-        loader        = new OBJLoader(manager);
-        loader.setCrossOrigin("");
-        loader.load( \'""" + obj_file + """\', function ( obj ) {
-            object = obj;
-        }, onProgress, onError);
-    }
-
-    // loading MTL ontop of OBJ
-    else if ( """ + ("true" if mtl_file is not None else "false") + """ ) {
-        var manager   = new THREE.LoadingManager();
-		manager.addHandler( /\.dds$/i, new DDSLoader() );
-        // Uncomment if you need to use TGA textures
-		// manager.addHandler( /\.tga$/i, new TGALoader() );
-
-        var mtlLoader = new MTLLoader( manager )
-            .load( \'""" + mtl_file + """\', function ( materials ) {
-                materials.preload();
-                new OBJLoader( manager )
-                    .setMaterials( materials )
-                    .load( \'""" + obj_file + """\', function ( object ) {
-                        object.position.y = - 95;
-                        scene.add( object );
-                    }, onProgress, onError );
-            } );
-    }
-
-    else {
-        loader = new OBJLoader();
-        loader.load( \'""" + obj_file + """\', function ( obj ) {
-            object = obj;
-            scene.add(object);
-        }, onProgress, onError);
-    }
-
+    """ + "\n" + load_str + "\n" """
 
     // Renderer setup
     renderer = new THREE.WebGLRenderer();
