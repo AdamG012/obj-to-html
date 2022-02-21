@@ -80,7 +80,6 @@ def obj_to_html():
             new OBJLoader( manager )
                 .setMaterials( materials )
                 .load( \'""" + obj_file + """\', function ( object ) {
-                    object.position.y = - 95;
                     scene.add( object );
                 }, onProgress, onError );
         } );
