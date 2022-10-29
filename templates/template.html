@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{title}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    </head>
+    <body>
+    <script type="module">
+import * as THREE from 'https://cdn.skypack.dev/three@0.132.2/build/three.module.js';
+import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+import { OBJLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/OBJLoader.js';
+
+let container;
+let camera, scene, renderer;
+let mouseX = 0, mouseY = 0;
+let windowHalfX = window.innerWidth / 2;
+let windowHalfY = window.innerHeight / 2;
+let object;
+init();
+animate();
+
+function init() {
+
+    container = document.createElement( 'div' );
+    document.body.appendChild( container );
+    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, {min_camera}, {max_camera});
+    camera.position.z = {z_pos};
+    camera.rotation.order = 'YXZ';
+
+    // scene
+    scene = new THREE.Scene();
+    const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
+    scene.add( ambientLight );
+    const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
+    camera.add( pointLight );
+    scene.add( camera );
+
+    // loading object
+    function loadModel() {
+        object.traverse( function ( child ) {
+            if ( child.isMesh ) child.material = material;
+        });
+        scene.add(object);
+    }
+    // object = loader.parse(objContent);
+
+    // loading textures
+    if ( {is_texture}) {
+        const manager = new THREE.LoadingManager(loadModel);
+        const textureLoader = new THREE.TextureLoader(manager);
+        const texture       = textureLoader.load( '{texture_url}' );
+        const material      = new THREE.MeshPhysicalMaterial( { map : texture } );
+        const loader = new OBJLoader(manager);
+        loader.load( '{obj_file}' , function ( obj ) {
+            object = obj;
+        });
+    }
+
+    // loading MTL
+    else if ( {is_mtl} ) {
+        var manager   = new THREE.LoadingManager();
+        var mtlLoader = new MTLLoader( manager )
+            .load( {mtl_url} , function ( materials ) {
+                materials.preload();
+                new OBJLoader( manager )
+                    .setMaterials( materials )
+                    .load( {obj_file} , function ( object ) {
+                        object.position.y = - 95;
+                        scene.add( object );
+                    }, onProgress, onError );
+            } );
+    }
+
+    else {
+        loader.load( '{obj_file}', function ( obj ) {
+            object = obj;
+        });
+    }
+
+    scene.add(object);
+
+    // Renderer setup
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+    // Orbit controls
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.autoRotate = true;
+    orbitControls.autoRotateSpeed = -2.0;
+    document.body.appendChild(renderer.domElement);
+
+    window.addEventListener( 'resize', onWindowResize );
+}
+
+function onWindowResize() {
+
+    windowHalfX = window.innerWidth / 2;
+    windowHalfY = window.innerHeight / 2;
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+function animate() {
+
+    requestAnimationFrame( animate );
+    render();
+
+}
+
+function render() {
+    camera.lookAt( scene.position );
+    renderer.render( scene, camera );
+}
+        </script>
+	</body>
+</html>

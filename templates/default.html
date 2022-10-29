@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+          overflow: hidden;
+          margin: 0px;
+      }
+
+      #progressBar {
+          width: 100%;
+          background-color: #ddd;
+      }
+
+      #completionBar {
+          width: 0%;
+          background-color: #48BA6D;
+          text-align: center;
+          line-height: 30px;
+          color: white;
+      }
+
+      #annotationsPanel {
+          position: absolute;
+          top: 60px;
+          left: 4px;
+          width: auto;
+          height: auto;
+          color: white;
+          font-family: monospace;
+      }
+
+      #annotationsPanel ul {
+          padding: 0;
+          list-style-type: none;
+      }
+
+      .annotationLabel {
+          color: #ffffff;
+          font-family: monospace;
+          pointer-events: none;
+          font-size: 17px;
+      }
+
+      .annotationDescription {
+          color: #ffffff;
+          font-family: monospace;
+          pointer-events: none;
+          font-size: 14px;
+          position: absolute;
+          left: 25px;
+          padding: 1em;
+          width: 200px;
+          background: rgba(0, 0, 0, 0.66);
+          border-radius: 0.5em;
+          transition: opacity 0.5s;
+          display: none;
+      }
+
+      .annotationButton {
+          width: 160px;
+          height: 70px;
+          font-family: monospace;
+          background-color: rgba(0.25, 0.25, 0.25, 0.5);
+          color: white;
+          text-align: left;
+          padding-left: 20px;
+          cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="progressBar">
+      <div id="completionBar">0%</div>
+    </div>
+    <div id="annotationsPanel"></div>
+    <br>
+    <script type="module">
+      import * as THREE from 'https://cdn.skypack.dev/three@0.132.2/build/three.module.js';
+      import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+      import { OBJLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/OBJLoader.js';
+      import { MTLLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/MTLLoader.js';
+      import { DDSLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/DDSLoader.js';
+      import Stats from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/libs/stats.module.js'
+      import { TWEEN } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/libs/tween.module.min.js'
+      import { CSS2DRenderer, CSS2DObject } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/renderers/CSS2DRenderer.js'
+      let container;
+      let camera, scene, renderer;
+      let mouseX = 0, mouseY = 0;
+      let windowHalfX = window.innerWidth / 2;
+      let windowHalfY = window.innerHeight / 2;
+      const sceneMeshes = new Array();
+      let object;
+      init();
+      animate();
+
+      // Annotation
+      let annotations = []
+      const annotationMarkers = []
+
+      // Light Settings
+      var light = new THREE.DirectionalLight()
+      light.position.set(-30, 30, 30)
+      scene.add(light)
+      var light2 = new THREE.DirectionalLight()
+      light2.position.set(30, 30, -30)
+      scene.add(light2)
+
+
+      // If we need textures
+      //const texture = new THREE.TextureLoader().load('img/circle.png')
+
+      function init() {
+          container = document.createElement( 'div' );
+          document.body.appendChild( container );
+          camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, {{ min_camera }}, {{ max_camera }});
+          camera.position.z = {{ z_pos }};
+          camera.rotation.order = 'YXZ';
+
+          // scene
+          scene = new THREE.Scene();
+          const ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
+          scene.add( ambientLight );
+          const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
+          camera.add( pointLight );
+          scene.add( camera );
+
+          var object;
+          var material;
+          var loader;
+          var textureLoader;
+          var texture;
+
+          load_func();
+
+          // Renderer setup
+          renderer = new THREE.WebGLRenderer({antialias:true});
+          renderer.setPixelRatio( window.devicePixelRatio );
+          renderer.setSize( window.innerWidth, window.innerHeight );
+          container.appendChild( renderer.domElement );
+
+          // Orbit controls
+          const orbitControls = new OrbitControls(camera, renderer.domElement);
+          orbitControls.autoRotate = true;
+          orbitControls.autoRotateSpeed = -2.0;
+          document.body.appendChild(renderer.domElement);
+
+          window.addEventListener( 'resize', onWindowResize );
+
+
+          // Label Controls
+          const labelRenderer = new CSS2DRenderer();
+          labelRenderer.setSize(window.innerWidth, window.innerHeight);
+          labelRenderer.domElement.style.position = 'absolute';
+          labelRenderer.domElement.style.top = '0px';
+          labelRenderer.domElement.style.pointerEvents = 'none';
+          document.body.appendChild(labelRenderer.domElement);
+          const raycaster = new THREE.Raycaster();
+      }
+
+
+      function onProgress( xhr ) {
+          if ( xhr.lengthComputable ) {
+              const percentComplete = xhr.loaded / xhr.total * 100;
+              var roundedPercentage = Math.round( percentComplete, 2 );
+              console.log( 'model ' + roundedPercentage + '% downloaded' );
+              document.getElementById("completionBar").style.width  = roundedPercentage + "%";
+              document.getElementById("completionBar").innerHTML    = "The model is " + roundedPercentage + " percent downloaded.";
+        }
+      }
+
+      function onError() {}
+
+
+      function onWindowResize() {
+
+          windowHalfX = window.innerWidth / 2;
+          windowHalfY = window.innerHeight / 2;
+
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+
+          renderer.setSize( window.innerWidth, window.innerHeight );
+
+      }
+
+      function animate() {
+
+          requestAnimationFrame( animate );
+          render();
+
+      }
+
+      function render() {
+          camera.lookAt( scene.position );
+          renderer.render( scene, camera );
+      }
+
+      // loading object
+      function loadModel() {
+          object.traverse( function ( child ) {
+              if ( child.isMesh ) child.material.map = texture;
+          });
+          scene.add(object);
+      }
+
+      // TODO
+      function load_func() {
+          {{ load_str }}
+      }
+
+      function gotoAnnotation(a) {
+          new TWEEN.Tween(camera.position)
+              .to(
+                  {
+                      x: a.camPos.x,
+                      y: a.camPos.y,
+                      z: a.camPos.z,
+                  },
+                  500
+              )
+              .easing(TWEEN.Easing.Cubic.Out)
+              .start()
+          new TWEEN.Tween(controls.target)
+              .to(
+                  {
+                      x: a.lookAt.x,
+                      y: a.lookAt.y,
+                      z: a.lookAt.z,
+                  },
+                  500
+              )
+              .easing(TWEEN.Easing.Cubic.Out)
+              .start()
+          Object.keys(annotations).forEach((annotation) => {
+              if (annotations[annotation].descriptionDomElement) {
+                  annotations[annotation].descriptionDomElement.style.display = 'none'
+              }
+          })
+          if (a.descriptionDomElement) {
+              console.log(a.descriptionDomElement.style.display)
+              a.descriptionDomElement.style.display = 'block'
+          }
+      }
+    </script>
+  </body>
+</html>
