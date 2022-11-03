@@ -41,7 +41,7 @@ The GUI can be loaded using running the `obj_to_html_gui.py` file, this has been
 **Python Script:**
 
 ```python
-python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE] [--autoconvert [--access_token ACCESS_TOKEN] [--prefix PREFIX] [-c COURSE_NUMBER] [--directory DIRECTORY]]
+python obj_html_converter/obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE] [--autoconvert [--access_token ACCESS_TOKEN] [--prefix PREFIX] [-c COURSE_NUMBER] [--directory DIRECTORY]]
 ```
 
 Positional arguments:
@@ -65,4 +65,4 @@ Optional arguments:
     - `-c`: The course number of the canvas link.
 
 Example using tree.obj from Three.js:
-                  `python -m  src.converters.obj_to_html  https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/obj/tree.obj tree.html "Tree Object"`
+                  `python obj_html_converter/obj_to_html_gui.py https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/obj/tree.obj tree.html "Tree Object"`
