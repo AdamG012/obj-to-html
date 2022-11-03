@@ -169,8 +169,13 @@
               console.log( 'model ' + roundedPercentage + '% downloaded' );
               document.getElementById("completionBar").style.width  = roundedPercentage + "%";
               document.getElementById("completionBar").innerHTML    = "The model is " + roundedPercentage + " percent downloaded.";
+        } else {
+              console.log("Length not computable.");
+              document.getElementById("completionBar").style.width  = "100" + "%";
+              document.getElementById("completionBar").innerHTML    = "The model length cannot be computer but is downloaded/downloading.";
         }
       }
+
 
       function onError() {}
 
