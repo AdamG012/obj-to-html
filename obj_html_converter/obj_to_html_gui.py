@@ -57,7 +57,7 @@ def main():
     # Required Arguments
     parser.add_argument('obj_file', metavar="obj_file", type=str, widget="FileChooser",
                         help='The absolute or relative path to the OBJ file.')
-    parser.add_argument('output', metavar="output", type=str, default="out/", widget="FileSaver",
+    parser.add_argument('output', metavar="output", type=str,  widget="FileSaver",
                         help='The name for the output file. NOTE: Has to be suffixed by .html')
     parser.add_argument('title', type=str,
                         help='The title for the HTML file.')
