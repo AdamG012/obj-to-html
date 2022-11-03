@@ -6,7 +6,7 @@ The code contains material and inspiration from ThreeJS : https://github.com/mrd
 
 Usage:
 
-python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE]
+python obj_html_converter/obj_to_html.py  <OBJECT_FILE> <OUTPUT_NAME> <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE]
 
 Example:
                   python obj_to_html.py tree.obj tree.html "Tree Object"

@@ -39,7 +39,7 @@ import jinja2
     python obj_to_html.py <OBJECT_FILE> <OUTPUT_NAME> <TITLE> [--z_pos Z_POS] [--min_camera MIN_CAMERA] [--max_camera MAX_CAMERA] [--texture TEXTURE_FILE] [--mtl_file MTL_FILE]\n\n + \
 
     Example:
-    python obj_to_html.py tree.obj tree.html \'Tree Object\'""",
+    python obj_html_converter/obj_to_html.py tree.obj tree.html \'Tree Object\'""",
     'version': '0.2a',
     'copyright': '2022',
     'website': 'https://github.com/AdamG012/obj-to-html',
@@ -57,7 +57,7 @@ def main():
     # Required Arguments
     parser.add_argument('obj_file', metavar="obj_file", type=str, widget="FileChooser",
                         help='The absolute or relative path to the OBJ file.')
-    parser.add_argument('output', metavar="output", type=str,  widget="FileSaver",
+    parser.add_argument('output', metavar="output", type=str, default="out/", widget="FileSaver",
                         help='The name for the output file. NOTE: Has to be suffixed by .html')
     parser.add_argument('title', type=str,
                         help='The title for the HTML file.')
@@ -160,6 +160,8 @@ def convert_mtl_file(mtl_file, access_token, directory, prefix=None, course_num=
                 text_url = map_kds[line]
             mtl_raw[i] = f"map_Kd {text_url}\n"
 
+    # To not overwrite the existing file
+    mtl_file = mtl_file[:-4] + "_online.mtl"
     with open(mtl_file, 'w') as f:
         f.write("".join(mtl_raw))
 
