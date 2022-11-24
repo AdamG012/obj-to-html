@@ -40,14 +40,20 @@ def file_to_link(file_path, access_token, directory, prefix, course_num=None):
     # TODO Warning this will overwrite existing files uploaded
     file_name=os.path.basename(file_path)
 
+    # Set the course path to the users files or to a course's files
+    course_path = ""
     if course_num == None:
-        course_num = "users/self/"
+        course_path = "users/self/"
+    else:
+        course_path = f"courses/{course_num}/"
+
 
     # Step 1: Notify Canvas of the file upload
     params = {"parent_folder_path": directory,
               "name": file_name}
     authorisation = {'Authorization': f'Bearer {access_token}'}
-    initial_req = requests.post(f"https://{prefix}/api/v1/{course_num}files/", params=params, headers=authorisation)
+
+    initial_req = requests.post(f"https://{prefix}/api/v1/{course_path}files/", params=params, headers=authorisation)
 
     # Get the JSON
     request_json = initial_req.json()
