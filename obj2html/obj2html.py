@@ -15,8 +15,7 @@ Example:
 import sys
 import argparse
 import jinja2
-from obj_to_html.utils import grab_canvas_urls, file_to_link
-from obj_parser import obj_to_html
+from obj2html.parser.obj_parser import obj_to_html
 
 def main():
     parser = argparse.ArgumentParser(prog = "OBJ-to-HTML", description="This program will convert a given OBJ file to a HTML format such that it can be viewed and shared within the browser. " +

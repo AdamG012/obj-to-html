@@ -13,11 +13,10 @@ Example:
                   python obj_to_html.py tree.obj tree.html "Tree Object"
 
 """
-from utils import *
 import argparse
 from gooey import Gooey, GooeyParser
 import jinja2
-from obj_parser import obj_to_html
+from obj2html.parser.obj_parser import obj_to_html
 
 
 @Gooey(menu=[{'name': 'Help', 'items': [{
