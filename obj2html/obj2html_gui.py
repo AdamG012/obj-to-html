@@ -16,8 +16,13 @@ Example:
 import argparse
 from gooey import Gooey, GooeyParser
 import jinja2
-from obj2html.parser.obj_parser import obj_to_html
 
+import os
+import sys
+project_dir = os.path.dirname(os.path.realpath("__file__"))
+sys.path.insert(0, project_dir)
+
+from obj2html.parser.obj_parser import obj_to_html
 
 @Gooey(menu=[{'name': 'Help', 'items': [{
     'type': 'AboutDialog',

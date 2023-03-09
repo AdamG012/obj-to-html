@@ -17,6 +17,12 @@ import argparse
 import jinja2
 from obj2html.parser.obj_parser import obj_to_html
 
+# WORKAROUND For GOOEY Imports
+import os
+import sys
+project_dir = os.path.dirname(os.path.realpath("__file__"))
+sys.path.insert(0, project_dir)
+
 def main():
     parser = argparse.ArgumentParser(prog = "OBJ-to-HTML", description="This program will convert a given OBJ file to a HTML format such that it can be viewed and shared within the browser. " +
                          "The implementation involves parsing the OBJ file using ThreeJS and then adding the object to the scene. " + \
