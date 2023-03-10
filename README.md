@@ -40,7 +40,7 @@ The exe file is available under the releases page. Just enter your options accor
 
 The GUI can be loaded using running the `obj2html_gui.py` file, this has been completed with the help of [Gooey](https://github.com/chriskiehl/Gooey "Gooey").
 
-![GUI](./images/gui.png)
+![GUI](https://raw.githubusercontent.com/AdamG012/images/gui.png)
 
 **Python Script:**
 
