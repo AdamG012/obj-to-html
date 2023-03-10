@@ -20,13 +20,15 @@ gooey=1.0.8.1 # Optional if not using GUI
 Jinja2==3.1.2
 requests==2.28.1
 argparse==1.4.0
+# Warning this does take a while to build, you may want to use a prebuilt version. See https://wiki.wxpython.org/How%20to%20install%20wxPython
+wxpython 
 ```
 
 On the browser side there may be issues for Firefox (or possibly others) users who have tinkered with some privacy/security settings in `about:config` may run into issues if they have disabled WebGL settings. Otherwise this is working across Chromium and Firefox on the latest stable distributions.
 
 ### Acknowledgements
 
-The code contains material and inspiration from ThreeJS : https://github.com/mrdoob/three.js/ and their examples to help load OBJ files and basically do all the heavy lifting. [Gooey][https://github.com/chriskiehl/Gooey] and [Jinja2][https://jinja.palletsprojects.com/] are also used.
+The code contains material and inspiration from ThreeJS : https://github.com/mrdoob/three.js/ and their examples to help load OBJ files and basically do all the heavy lifting. [Gooey](https://github.com/chriskiehl/Gooey "Gooey") and [Jinja2](https://jinja.palletsprojects.com/ "Jinja2") are also used.
 
 ### Usage and Examples
 
@@ -36,7 +38,9 @@ The exe file is available under the releases page. Just enter your options accor
 
 **Python GUI:**
 
-The GUI can be loaded using running the `obj2html_gui.py` file, this has been completed with the help of [Gooey][https://github.com/chriskiehl/Gooey].
+The GUI can be loaded using running the `obj2html_gui.py` file, this has been completed with the help of [Gooey](https://github.com/chriskiehl/Gooey "Gooey").
+
+![GUI](./images/gui.png)
 
 **Python Script:**
 
